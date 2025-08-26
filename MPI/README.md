@@ -91,7 +91,11 @@ Every MPI program must:
 * MPI programs are usually run with:
 
   ```bash
-  mpirun -np 4 ./program
+   mpicc Matrix_Multiplication.c -o Matrix_Multiplication
+  ```
+  → Compile `program`.
+  ```bash
+   mpiexec -n 4 ./Matrix_Multiplication
   ```
 
   → Runs `program` with 4 processes.
