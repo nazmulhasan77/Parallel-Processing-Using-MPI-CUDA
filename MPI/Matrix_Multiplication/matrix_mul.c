@@ -2,6 +2,12 @@
 #include <stdlib.h>
 #include <mpi.h>
 
+// # Compile
+// mpicxx -o matrix_mul matrix_mul.cpp 
+// # Run with 4 MPI processes
+// mpirun -np 4 ./matrix_mul
+
+
 // Function to print a matrix
 void display(int rows, int cols, int matrix[rows][cols]) {
     for(int i = 0; i < rows; i++) {

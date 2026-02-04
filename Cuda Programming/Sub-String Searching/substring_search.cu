@@ -1,4 +1,9 @@
-#include <bits/stdc++.h>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <cstring>
 #include <cuda.h>
 
 using namespace std;
@@ -9,10 +14,7 @@ using namespace std;
 // =====================================
 // LCS Device Function (DP algorithm)
 // =====================================
-__device__ int lcs_length(char* a, char* b) {
-    int n = strlen(a);
-    int m = strlen(b);
-
+__device__ int lcs_length(char* a, int n, char* b, int m) {
     int dp[MAX_QUERY_LEN + 1][MAX_STR_LEN + 1];
 
     for(int i=0;i<=n;i++)
@@ -31,29 +33,31 @@ __device__ int lcs_length(char* a, char* b) {
     return dp[n][m];
 }
 
-
 // =====================================
 // Kernel: LCS Search
 // =====================================
 __global__ void lcsSearch(char* d_lines,
                           int num_lines,
                           char* search,
+                          int query_len,
                           int threshold) {
 
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
 
-    if(idx < num_lines) {
+    if(idx >= num_lines) return;
 
-        char* line = d_lines + idx * MAX_STR_LEN;
+    char* line = d_lines + idx * MAX_STR_LEN;
 
-        int lcs = lcs_length(search, line);
+    // compute line length on device
+    int line_len = 0;
+    while(line[line_len] != '\0' && line_len < MAX_STR_LEN) line_len++;
 
-        if(lcs >= threshold) {
-            printf("Match (LCS=%d): %s\n", lcs, line);
-        }
+    int lcs = lcs_length(search, query_len, line, line_len);
+
+    if(lcs >= threshold) {
+        printf("Match (LCS=%d): %s\n", lcs, line);
     }
 }
-
 
 // =====================================
 // MAIN
@@ -61,13 +65,14 @@ __global__ void lcsSearch(char* d_lines,
 int main(int argc, char* argv[]) {
 
     if(argc != 4) {
-        cout << "Usage: ./prog <search_string> <threads> <threshold>\n";
+        cout << "Usage: ./substring_search <search_string> <threads> <threshold>\n";
         return 0;
     }
 
     string query = argv[1];
     int threads = atoi(argv[2]);
     int threshold = atoi(argv[3]);
+    int query_len = query.size();
 
     string file_name = "dataset.txt";
 
@@ -82,6 +87,10 @@ int main(int argc, char* argv[]) {
     }
 
     int n = lines.size();
+    if(n == 0){
+        cout << "No lines in dataset.txt\n";
+        return 0;
+    }
 
     // Flatten memory
     char* h_lines = (char*)malloc(n * MAX_STR_LEN);
@@ -95,15 +104,14 @@ int main(int argc, char* argv[]) {
     char *d_lines, *d_query;
 
     cudaMalloc(&d_lines, n * MAX_STR_LEN);
-    cudaMalloc(&d_query, query.size()+1);
+    cudaMalloc(&d_query, query_len + 1);
 
     cudaMemcpy(d_lines, h_lines, n * MAX_STR_LEN, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_query, query.c_str(), query.size()+1, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_query, query.c_str(), query_len + 1, cudaMemcpyHostToDevice);
 
-    // Launch
+    // Launch kernel
     int blocks = (n + threads - 1) / threads;
-
-    lcsSearch<<<blocks, threads>>>(d_lines, n, d_query, threshold);
+    lcsSearch<<<blocks, threads>>>(d_lines, n, d_query, query_len, threshold);
 
     cudaDeviceSynchronize();
 
