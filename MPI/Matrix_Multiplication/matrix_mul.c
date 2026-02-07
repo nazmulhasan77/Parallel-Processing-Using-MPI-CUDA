@@ -16,11 +16,11 @@ void display(int rows, int cols, int matrix[rows][cols]) {
 int main(int argc, char **argv) {                                
     MPI_Init(&argc, &argv);
 
-    int rank, size;
+    int rank, size;  
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
 
-    int K = 120, M = 50, N = 50, P = 50;
+    int K = 240, M = 40, N = 40, P = 40;
     // if(rank == 0) {
     //     printf("Enter Number of Matrices: ");
     //     scanf("%d", &K);
@@ -33,6 +33,8 @@ int main(int argc, char **argv) {
     // }
 
     MPI_Bcast(&K, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    //broadcast variable K from process 0 to all processes.
+    //memory location,number of elements, data type, root process, communicator
     MPI_Bcast(&M, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&N, 1, MPI_INT, 0, MPI_COMM_WORLD);
     MPI_Bcast(&P, 1, MPI_INT, 0, MPI_COMM_WORLD); 
@@ -64,6 +66,8 @@ int main(int argc, char **argv) {
     // Buffer to store portion of the matrices assigned to each process
     int localA[K / size][M][N], localB[K / size][N][P], localR[K / size][M][P];
     MPI_Scatter(A, (K / size) * M * N, MPI_INT, localA, (K / size) * M * N, MPI_INT, 0, MPI_COMM_WORLD);
+    // Scatter the matrices to all processes
+    //memory location, number of elements, data type, buffer to receive, number of elements to receive, data type, root process, communicator
     MPI_Scatter(B, (K / size) * N * P, MPI_INT, localB, (K / size) * N * P, MPI_INT, 0, MPI_COMM_WORLD);
 
     // Barrier to synchronize all processes before timing starts
@@ -88,6 +92,7 @@ int main(int argc, char **argv) {
 
     // Gather result matrices from all processes to the root process
     MPI_Gather(localR, (K / size) * M * P, MPI_INT, R, (K / size) * M * P, MPI_INT, 0, MPI_COMM_WORLD);
+    //send buffer, number of elements to send, data type, buffer to receive, number of elements to receive, data type, root process, communicator
 
     // Remove the comment to print result matrices
     //Print all the result matrices

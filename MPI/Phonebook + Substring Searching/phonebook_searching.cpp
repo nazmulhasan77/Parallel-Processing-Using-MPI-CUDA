@@ -7,6 +7,7 @@ using namespace std;
 void send_string(const string &text, int receiver) {
     int len = text.size() + 1;
     MPI_Send(&len, 1, MPI_INT, receiver, 1, MPI_COMM_WORLD);
+    //sent buffer,count,datatype,receiver,tag
     MPI_Send(text.c_str(), len, MPI_CHAR, receiver, 1, MPI_COMM_WORLD);
 }
 

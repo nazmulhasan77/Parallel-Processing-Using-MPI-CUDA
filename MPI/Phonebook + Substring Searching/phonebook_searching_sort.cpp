@@ -112,6 +112,7 @@ int main(int argc, char **argv) {
         // --- SORTING ---
         // Sort all gathered matches alphabetically
         sort(final_matches.begin(), final_matches.end());
+        //reverse(final_matches.begin(), final_matches.end());
 
         end_time = MPI_Wtime();
 
