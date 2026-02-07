@@ -1,0 +1,64 @@
+nazmul hasan
+nazmul hossain
+nazmul islam
+nazmul dataset project
+nazmul loves cuda programming
+hasan nazmul
+md nazmul
+nazmul rahman
+
+machine learning basics
+machine learning with cuda
+machine learning project
+deep learning tutorial
+deep neural network
+learning cuda parallel programming
+
+data science course
+data analysis project
+data mining basics
+dataset preparation guide
+dataset processing step
+dataset search example
+
+parallel computing introduction
+parallel string matching
+gpu programming tutorial
+cuda kernel example
+cuda memory optimization
+thread block example
+
+hello world program
+simple text file
+this is a test string
+longest common subsequence example
+string matching algorithm
+substring search demo
+
+apple banana mango
+banana mango orange
+fresh fruits market
+vegetable shop nearby
+rice dal curry
+home cooking recipe
+
+rajshahi university campus
+computer science department
+software engineering lab
+final year project work
+thesis research paper
+bioinformatics research lab
+
+protein sequence analysis
+gene expression dataset
+medical diagnosis report
+chronic kidney disease study
+ckd biomarker identification
+patient health record
+
+random sentence one
+random sentence two
+another simple line
+yet another example
+just some normal text
+end of dataset
