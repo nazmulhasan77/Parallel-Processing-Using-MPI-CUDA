@@ -1,133 +1,142 @@
-# 🧩 MPI Theory
+## **Basic Structure of an MPI Program**
 
-## 🔹 1. What is MPI?
+### 1. **Include MPI Header**
 
-* **MPI (Message Passing Interface)** is a **standard** (not a library itself) that defines a set of functions for communication between processes in **parallel and distributed computing**.
-* Implementations: **Open MPI**, **MPICH**, Intel MPI, MVAPICH, etc.
-* Works in **distributed memory systems** (clusters, supercomputers) where processes don’t share memory but exchange information via **messages**.
+```c
+#include <mpi.h>
+```
 
----
-
-## 🔹 2. Parallel Programming Models
-
-* **Shared Memory** (OpenMP, Pthreads): All processes/threads see the same memory space.
-* **Distributed Memory** (MPI): Each process has its own memory; communication is explicit through send/receive.
-* **Hybrid Model**: MPI + OpenMP/CUDA (common in HPC).
-
-MPI belongs to **Distributed Memory Model**.
+This includes all necessary MPI functions and constants.
 
 ---
 
-## 🔹 3. MPI Process Model
+### 2. **Initialize MPI**
 
-* **SPMD (Single Program Multiple Data)** is the most common model.
+```c
+MPI_Init(&argc, &argv);
+```
 
-  * Each process runs the **same program**, but operates on **different data**.
-  * Processes are distinguished by their **rank**.
-
-Example:
-
-* Process 0 → read input, distribute data.
-* Process 1, 2, 3… → perform computations in parallel.
+* **Purpose:** Starts the MPI environment.
+* **Arguments:** `argc` and `argv` from `main()`, so MPI can process command-line arguments if needed.
 
 ---
 
-## 🔹 4. MPI Basics
+### 3. **Get Rank and Size**
 
-### a) Initialization & Finalization
+```c
+int world_rank, world_size;
 
-Every MPI program must:
+MPI_Comm_rank(MPI_COMM_WORLD, &world_rank); // Get the process ID
+MPI_Comm_size(MPI_COMM_WORLD, &world_size); // Get total number of processes
+```
 
-1. **Start MPI environment**: `MPI_Init()`
-2. **Determine process rank & size**:
-
-   * `MPI_Comm_rank` → unique ID of process (0…N-1).
-   * `MPI_Comm_size` → total number of processes.
-3. **End environment**: `MPI_Finalize()`
-
----
-
-### b) Communication Types
-
-1. **Point-to-Point Communication**
-
-   * One process sends a message, another receives it.
-   * Functions: `MPI_Send`, `MPI_Recv`
-   * Can be **blocking** (waits until complete) or **nonblocking** (`MPI_Isend`, `MPI_Irecv`).
-
-2. **Collective Communication**
-
-   * Involves all processes in a communicator.
-   * Examples:
-
-     * `MPI_Bcast` → broadcast from one process to all.
-     * `MPI_Scatter` → split data from root to processes.
-     * `MPI_Gather` → collect data from processes.
-     * `MPI_Reduce` → combine values (sum, min, max, etc.).
-
-3. **Synchronization**
-
-   * `MPI_Barrier` → all processes wait until everyone reaches this point.
+* **MPI_Comm_rank:** Returns the unique rank (ID) of the process (0,1,2,...,size-1).
+* **MPI_Comm_size:** Returns the total number of processes in the communicator (`MPI_COMM_WORLD` is the default global communicator).
 
 ---
 
-### c) Communicators
+### 4. **Communication Between Processes**
 
-* A **communicator** defines a group of processes that can talk to each other.
-* Default communicator: `MPI_COMM_WORLD` (all processes).
-* Can create sub-communicators for specific tasks.
+MPI provides **point-to-point** communication and **collective communication**.
 
----
+**Example: Point-to-Point Communication**
 
-### d) Derived Data Types
+```c
+int number;
+if (world_rank == 0) {
+    number = 42;
+    MPI_Send(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+} else if (world_rank == 1) {
+    MPI_Recv(&number, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+    printf("Process 1 received number %d from process 0\n", number);
+}
+```
 
-* MPI allows custom **data types** for sending structured data (arrays, structs).
-* Functions: `MPI_Type_contiguous`, `MPI_Type_vector`, `MPI_Type_create_struct`.
+**Explanation of MPI_Send/MPI_Recv arguments:**
 
----
-
-## 🔹 5. MPI Execution
-
-* MPI programs are usually run with:
-
-  ```bash
-   mpicc Matrix_Multiplication.c -o Matrix_Multiplication
-  ```
-  → Compile `program`.
-  ```bash
-   mpiexec -n 4 ./Matrix_Multiplication
-  ```
-
-  → Runs `program` with 4 processes.
-* Each process has its **own memory space** and communicates using MPI calls.
+1. `&number` → pointer to the data to send/receive.
+2. `1` → number of elements.
+3. `MPI_INT` → data type (can be `MPI_FLOAT`, `MPI_DOUBLE`, `MPI_CHAR`, etc.).
+4. Destination/Source rank (`0`, `1`, ...).
+5. `tag` → integer to label messages (used to differentiate message types, e.g., `0`).
+6. `MPI_COMM_WORLD` → communicator.
+7. `MPI_STATUS_IGNORE` → ignores the status output (can be used to get info about the message).
 
 ---
 
-## 🔹 6. Advantages of MPI
+### 5. **Finalize MPI**
 
-* Portable: Runs on any distributed system.
-* Scalable: Works from a few processes to hundreds of thousands.
-* Flexibility: Fine control over communication.
+```c
+MPI_Finalize();
+```
 
----
-
-## 🔹 7. Limitations of MPI
-
-* **Programming complexity**: Explicit message passing is harder than shared memory.
-* **Communication cost**: Data exchange over a network is slower than shared memory.
-* **Debugging difficulty**: Many processes = harder to track errors.
+* **Purpose:** Ends the MPI environment. No MPI function should be called after this.
 
 ---
 
-## 🔹 8. MPI vs Other Models
+## **Complete Minimal MPI Example**
 
-| Feature       | Shared Memory (OpenMP) | Distributed Memory (MPI) |
-| ------------- | ---------------------- | ------------------------ |
-| Memory access | Global shared memory   | Private per process      |
-| Communication | Implicit (via memory)  | Explicit (messages)      |
-| Scalability   | Limited (one machine)  | High (across clusters)   |
+```c
+#include <mpi.h>
+#include <stdio.h>
+
+int main(int argc, char** argv) {
+    // 1. Initialize MPI
+    MPI_Init(&argc, &argv);
+
+    // 2. Get rank and size
+    int world_rank, world_size;
+    MPI_Comm_rank(MPI_COMM_WORLD, &world_rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    printf("Hello from process %d of %d\n", world_rank, world_size);
+
+    // 3. Simple communication: send number from 0 to 1
+    if (world_rank == 0) {
+        int number = 42;
+        MPI_Send(&number, 1, MPI_INT, 1, 0, MPI_COMM_WORLD);
+        printf("Process 0 sent number %d to process 1\n", number);
+    } else if (world_rank == 1) {
+        int number;
+        MPI_Recv(&number, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+        printf("Process 1 received number %d from process 0\n", number);
+    }
+
+    // 4. Finalize MPI
+    MPI_Finalize();
+    return 0;
+}
+```
 
 ---
 
-✅ **In short:**
-MPI is the backbone of **High Performance Computing (HPC)**. It provides a standard way for processes in **distributed systems** to communicate and coordinate via message passing, enabling massive parallelism in scientific simulations, weather forecasting, machine learning, etc.
+### **How to Compile and Run**
+
+```bash
+mpicc -o mpi_example mpi_example.c   # Compile
+mpirun -np 2 ./mpi_example           # Run with 2 processes
+```
+
+**Expected Output:**
+
+```
+Hello from process 0 of 2
+Hello from process 1 of 2
+Process 0 sent number 42 to process 1
+Process 1 received number 42 from process 0
+```
+
+---
+
+✅ **Summary of Important MPI Functions**
+
+| Function                     | Purpose                              |
+| ---------------------------- | ------------------------------------ |
+| `MPI_Init(&argc, &argv)`     | Initialize MPI                       |
+| `MPI_Comm_size(comm, &size)` | Get number of processes              |
+| `MPI_Comm_rank(comm, &rank)` | Get rank (ID) of process             |
+| `MPI_Send(...)`              | Send message to another process      |
+| `MPI_Recv(...)`              | Receive message from another process |
+| `MPI_Finalize()`             | Finalize MPI                         |
+
+---

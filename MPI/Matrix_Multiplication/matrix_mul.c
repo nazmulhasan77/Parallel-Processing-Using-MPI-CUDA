@@ -120,3 +120,7 @@ To run: mpirun -np 4 ./matrix_mul
     to take user input
 
 */
+
+//sudo apt install openmpi-bin openmpi-common libopenmpi-dev
+//mpicc --version
+//mpirun --version
