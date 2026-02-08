@@ -9,6 +9,17 @@
 This includes all necessary MPI functions and constants.
 
 ---
+#### Installation 
+🐧 Ubuntu / Linux / WSL (Best & Easiest)
+Step 1 — Update
+sudo apt update
+
+Step 2 — Install OpenMPI
+sudo apt install openmpi-bin libopenmpi-dev
+
+Step 3 — Verify
+mpicc --version
+mpirun --version
 
 ### 2. **Initialize MPI**
 
